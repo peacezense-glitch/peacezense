@@ -2,6 +2,7 @@ export { calculateBaziFull, getElementBalance } from './engine';
 export { analyzeUsefulGod } from './usefulGod';
 export { generateLifeAnalysis } from './analysis';
 export { getYearlyFlow, getYearlyFlows } from './yearlyFlow';
+export { DATE_EVENT_TYPES, findAuspiciousDates, getDateSelectionSummary } from './dateSelection';
 
 import { calculateBaziFull, getElementBalance } from './engine';
 import { analyzeUsefulGod } from './usefulGod';

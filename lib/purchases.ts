@@ -5,6 +5,7 @@ import Purchases, {
   PurchasesPackage,
   CustomerInfo,
 } from 'react-native-purchases';
+import { CurrencyCode, PLAN_PRICES, formatPrice } from '@/constants/Pricing';
 
 const IOS_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ?? '';
 const ANDROID_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ?? '';
@@ -33,6 +34,14 @@ export interface SubscriptionPackage {
 
 let initialized = false;
 let cachedPackages: SubscriptionPackage[] = [];
+let fallbackCurrency: CurrencyCode = 'HKD';
+
+export function setFallbackCurrency(currency: CurrencyCode): void {
+  fallbackCurrency = currency;
+  if (!isPurchasesAvailable()) {
+    cachedPackages = getFallbackPackages(currency);
+  }
+}
 
 export function isPurchasesAvailable(): boolean {
   if (Platform.OS === 'web') return false;
@@ -69,7 +78,7 @@ export async function initPurchases(userId?: string): Promise<void> {
 
 export async function loadOfferings(): Promise<SubscriptionPackage[]> {
   if (!isPurchasesAvailable()) {
-    cachedPackages = getFallbackPackages();
+    cachedPackages = getFallbackPackages(fallbackCurrency);
     return cachedPackages;
   }
 
@@ -78,7 +87,7 @@ export async function loadOfferings(): Promise<SubscriptionPackage[]> {
     const current = offerings.current;
 
     if (!current) {
-      cachedPackages = getFallbackPackages();
+      cachedPackages = getFallbackPackages(fallbackCurrency);
       return cachedPackages;
     }
 
@@ -94,25 +103,26 @@ export async function loadOfferings(): Promise<SubscriptionPackage[]> {
     });
 
     if (cachedPackages.length === 0) {
-      cachedPackages = getFallbackPackages();
+      cachedPackages = getFallbackPackages(fallbackCurrency);
     }
 
     return cachedPackages;
   } catch (e) {
     console.warn('[Purchases] loadOfferings failed:', e);
-    cachedPackages = getFallbackPackages();
+    cachedPackages = getFallbackPackages(fallbackCurrency);
     return cachedPackages;
   }
 }
 
 export function getCachedPackages(): SubscriptionPackage[] {
-  return cachedPackages.length > 0 ? cachedPackages : getFallbackPackages();
+  return cachedPackages.length > 0 ? cachedPackages : getFallbackPackages(fallbackCurrency);
 }
 
-function getFallbackPackages(): SubscriptionPackage[] {
+function getFallbackPackages(currency: CurrencyCode = fallbackCurrency): SubscriptionPackage[] {
+  const prices = PLAN_PRICES[currency];
   return [
-    { id: 'monthly', title: '月度會員', price: 'NT$ 299', period: '/月' },
-    { id: 'yearly', title: '年度會員', price: 'NT$ 1,999', period: '/年' },
+    { id: 'monthly', title: '月度會員', price: formatPrice(prices.monthly, currency), period: '/月' },
+    { id: 'yearly', title: '年度會員', price: formatPrice(prices.yearly, currency), period: '/年' },
   ];
 }
 

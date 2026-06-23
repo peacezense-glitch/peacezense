@@ -72,6 +72,19 @@ export default function HomeScreen() {
         </Text>
       </View>
 
+      <Pressable
+        onPress={() => router.push('/modules/bazi-date' as never)}
+        style={({ pressed }) => [
+          styles.zeriBanner,
+          { backgroundColor: colors.secondary + '20', borderColor: colors.secondary, opacity: pressed ? 0.9 : 1 },
+        ]}
+      >
+        <Text style={[styles.zeriTitle, { color: colors.secondary }]}>📅 八字擇日</Text>
+        <Text style={[styles.zeriDesc, { color: colors.textSecondary }]}>
+          結婚、搬家、開業… 依你的命盤挑選良辰吉日
+        </Text>
+      </Pressable>
+
       {!isPremium && (
         <Pressable
           onPress={() => router.push('/subscribe' as never)}
@@ -135,6 +148,15 @@ const styles = StyleSheet.create({
   metaItem: { fontSize: 12, fontWeight: '600' },
   fortuneBazi: { fontSize: 12, lineHeight: 18, marginBottom: 4 },
   fortuneIching: { fontSize: 12 },
+  zeriBanner: {
+    marginHorizontal: 20,
+    marginBottom: 16,
+    padding: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  zeriTitle: { fontSize: 16, fontWeight: '700' },
+  zeriDesc: { fontSize: 13, marginTop: 4, lineHeight: 18 },
   upgradeBanner: {
     marginHorizontal: 20,
     marginBottom: 16,

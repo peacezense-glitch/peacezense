@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Text } from '@/components/Themed';
 import BaziChartDisplay from '@/components/BaziChartDisplay';
 import PremiumGate from '@/components/PremiumGate';
@@ -22,6 +23,7 @@ import Colors from '@/constants/Colors';
 export default function BaziScreen() {
   const { profile } = useUserProfile();
   const { canAccess } = useSubscription();
+  const router = useRouter();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   const [exporting, setExporting] = useState(false);
@@ -71,6 +73,14 @@ export default function BaziScreen() {
           {report.correctedTime ? ` → 校正後 ${report.correctedTime}` : ''}
         </Text>
       )}
+
+      <Pressable
+        onPress={() => router.push('/modules/bazi-date' as never)}
+        style={[styles.zeriBtn, { backgroundColor: colors.secondary }]}
+      >
+        <Text style={styles.zeriBtnTitle}>📅 八字擇日</Text>
+        <Text style={styles.zeriBtnDesc}>結婚、搬家、開業… 依命盤挑選良辰吉日</Text>
+      </Pressable>
 
       <InfoCard title="命盤四柱">
         <BaziChartDisplay
@@ -200,4 +210,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   exportText: { color: '#1A1428', fontWeight: '700', fontSize: 15 },
+  zeriBtn: {
+    padding: 16,
+    borderRadius: 14,
+    marginBottom: 16,
+  },
+  zeriBtnTitle: { color: '#1A1428', fontSize: 17, fontWeight: '800' },
+  zeriBtnDesc: { color: '#1A1428', fontSize: 13, marginTop: 4, opacity: 0.8 },
 });

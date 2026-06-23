@@ -1,32 +1,53 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StyleSheet, ScrollView, Pressable, View, ActivityIndicator, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { Text } from '@/components/Themed';
 import { useSubscription } from '@/context/SubscriptionContext';
-import { SUBSCRIPTION_PLANS } from '@/constants/Features';
+import { useCurrency } from '@/context/CurrencyContext';
+import { CURRENCIES, getPlanFeatures, PLAN_PRICES, formatPrice } from '@/constants/Pricing';
+import { setFallbackCurrency } from '@/lib/purchases';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 
 export default function SubscribeScreen() {
   const { upgrade, isPremium, restore, packages, purchasesAvailable } = useSubscription();
+  const { currency, setCurrency } = useCurrency();
   const router = useRouter();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   const [loading, setLoading] = useState<string | null>(null);
 
-  const displayPlans = packages.map((pkg) => {
-    const fallback = SUBSCRIPTION_PLANS.find((p) => p.id === pkg.id);
-    return {
-      id: pkg.id,
-      name: pkg.title,
-      price: pkg.price,
-      period: pkg.period,
-      popular: pkg.id === 'yearly',
-      features: fallback?.features ?? [],
-    };
-  });
+  useEffect(() => {
+    setFallbackCurrency(currency);
+  }, [currency]);
+
+  const features = getPlanFeatures(currency);
+  const prices = PLAN_PRICES[currency];
+
+  const displayPlans = [
+    {
+      id: 'monthly',
+      name: '月度會員',
+      price: purchasesAvailable
+        ? packages.find((p) => p.id === 'monthly')?.price ?? formatPrice(prices.monthly, currency)
+        : formatPrice(prices.monthly, currency),
+      period: '/月',
+      popular: false,
+      features: features.monthly,
+    },
+    {
+      id: 'yearly',
+      name: '年度會員',
+      price: purchasesAvailable
+        ? packages.find((p) => p.id === 'yearly')?.price ?? formatPrice(prices.yearly, currency)
+        : formatPrice(prices.yearly, currency),
+      period: '/年',
+      popular: true,
+      features: features.yearly,
+    },
+  ];
 
   const handleSubscribe = async (planId: string) => {
     setLoading(planId);
@@ -73,6 +94,26 @@ export default function SubscribeScreen() {
         </Text>
       </LinearGradient>
 
+      <View style={styles.currencyRow}>
+        {CURRENCIES.map((c) => (
+          <Pressable
+            key={c.code}
+            onPress={() => setCurrency(c.code)}
+            style={[
+              styles.currencyChip,
+              {
+                backgroundColor: currency === c.code ? colors.primary : colors.card,
+                borderColor: currency === c.code ? colors.primary : colors.border,
+              },
+            ]}
+          >
+            <Text style={{ color: currency === c.code ? '#fff' : colors.text, fontWeight: '600' }}>
+              {c.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
       {isPremium && (
         <View style={[styles.activeBadge, { backgroundColor: colors.secondary + '25' }]}>
           <Text style={[styles.activeText, { color: colors.secondary }]}>✓ 您已是會員</Text>
@@ -91,7 +132,6 @@ export default function SubscribeScreen() {
               borderColor: plan.popular ? colors.secondary : colors.border,
               opacity: pressed ? 0.9 : 1,
             },
-            plan.popular && styles.popularCard,
           ]}
         >
           {plan.popular && (
@@ -121,8 +161,8 @@ export default function SubscribeScreen() {
 
       <Text style={[styles.note, { color: colors.textSecondary }]}>
         {purchasesAvailable
-          ? '透過 App Store / Google Play 安全付款，隨時可取消訂閱。'
-          : '開發模式：未設定 RevenueCat API Key，點擊方案可體驗會員功能。正式版請設定 .env 並使用 EAS Build。'}
+          ? '透過 App Store / Google Play 安全付款，價格以商店顯示為準。'
+          : '開發模式：點擊方案可體驗會員功能。正式版請設定 RevenueCat 並使用 EAS Build。'}
       </Text>
 
       <Pressable onPress={handleRestore} disabled={!!loading} style={styles.restoreBtn}>
@@ -139,13 +179,14 @@ export default function SubscribeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 20, paddingBottom: 40 },
-  hero: { alignItems: 'center', padding: 32, borderRadius: 20, marginBottom: 24 },
+  hero: { alignItems: 'center', padding: 32, borderRadius: 20, marginBottom: 16 },
   title: { fontSize: 28, fontWeight: '800', marginTop: 12 },
   tagline: { fontSize: 14, textAlign: 'center', marginTop: 8, lineHeight: 20 },
+  currencyRow: { flexDirection: 'row', justifyContent: 'center', gap: 10, marginBottom: 20 },
+  currencyChip: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20, borderWidth: 1 },
   activeBadge: { padding: 12, borderRadius: 12, alignItems: 'center', marginBottom: 16 },
   activeText: { fontWeight: '700', fontSize: 15 },
   planCard: { borderRadius: 16, padding: 20, marginBottom: 16, borderWidth: 2 },
-  popularCard: { borderWidth: 2 },
   popularBadge: {
     position: 'absolute', top: -10, right: 16,
     paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12,

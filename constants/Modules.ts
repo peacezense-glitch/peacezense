@@ -16,7 +16,7 @@ export const LIFE_MODULES: ModuleDefinition[] = [
     id: 'bazi',
     title: '八字',
     titleEn: 'Bazi',
-    description: '四柱命理，洞察先天命格與大運流年',
+    description: '四柱命理、擇日良辰、大運流年',
     category: 'life',
     icon: { ios: 'square.grid.3x3.fill', android: 'grid_view', web: 'grid_view' },
     route: '/modules/bazi',
@@ -65,6 +65,16 @@ export const LIFE_MODULES: ModuleDefinition[] = [
 ];
 
 export const EVENT_MODULES: ModuleDefinition[] = [
+  {
+    id: 'bazi-date',
+    title: '八字擇日',
+    titleEn: 'Bazi Date Selection',
+    description: '結婚、搬家、開業… 依命盤喜忌挑選良辰吉日',
+    category: 'event',
+    icon: { ios: 'calendar.badge.clock', android: 'event', web: 'event' },
+    route: '/modules/bazi-date',
+    color: '#8B4513',
+  },
   {
     id: 'iching',
     title: '易經占卜',
