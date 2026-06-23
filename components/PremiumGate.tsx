@@ -7,6 +7,7 @@ import { useSubscription } from '@/context/SubscriptionContext';
 import { FeatureKey, getFeatureLabel } from '@/constants/Features';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
+import { cardShadow, radius } from '@/constants/Theme';
 
 interface PremiumGateProps {
   feature: FeatureKey;
@@ -25,19 +26,21 @@ export default function PremiumGate({ feature, children, compact = false }: Prem
   }
 
   return (
-    <View style={styles.wrapper}>
-      <View style={styles.blurred} pointerEvents="none">
+    <View style={[styles.wrapper, cardShadow(colorScheme)]}>
+      <View style={styles.preview} pointerEvents="none">
         {children}
       </View>
       <LinearGradient
-        colors={['transparent', colors.background + 'EE', colors.background]}
+        colors={['transparent', colors.card + 'CC', colors.card + 'F5']}
         style={styles.overlay}
       >
-        <SymbolView
-          name={{ ios: 'lock.fill', android: 'lock', web: 'lock' }}
-          tintColor={colors.secondary}
-          size={compact ? 24 : 32}
-        />
+        <View style={[styles.lockBadge, { backgroundColor: colors.secondary + '25' }]}>
+          <SymbolView
+            name={{ ios: 'lock.fill', android: 'lock', web: 'lock' }}
+            tintColor={colors.secondary}
+            size={compact ? 20 : 24}
+          />
+        </View>
         <Text style={[styles.title, { color: colors.text }]}>
           {getFeatureLabel(feature)}
         </Text>
@@ -48,7 +51,7 @@ export default function PremiumGate({ feature, children, compact = false }: Prem
           onPress={() => router.push('/subscribe' as never)}
           style={[styles.button, { backgroundColor: colors.secondary }]}
         >
-          <Text style={styles.buttonText}>升級會員</Text>
+          <Text style={[styles.buttonText, { color: colors.onSecondary }]}>升級會員</Text>
         </Pressable>
       </LinearGradient>
     </View>
@@ -59,10 +62,13 @@ const styles = StyleSheet.create({
   wrapper: {
     position: 'relative',
     overflow: 'hidden',
-    borderRadius: 16,
+    borderRadius: radius.md,
+    marginBottom: 4,
   },
-  blurred: {
-    opacity: 0.3,
+  preview: {
+    opacity: 0.45,
+    maxHeight: 200,
+    overflow: 'hidden',
   },
   overlay: {
     position: 'absolute',
@@ -73,12 +79,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
-    gap: 8,
+    gap: 6,
+  },
+  lockBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 16,
     fontWeight: '700',
-    marginTop: 8,
+    marginTop: 4,
   },
   desc: {
     fontSize: 13,
@@ -87,11 +100,10 @@ const styles = StyleSheet.create({
   button: {
     paddingHorizontal: 24,
     paddingVertical: 10,
-    borderRadius: 20,
+    borderRadius: radius.pill,
     marginTop: 8,
   },
   buttonText: {
-    color: '#1A1428',
     fontWeight: '700',
     fontSize: 14,
   },

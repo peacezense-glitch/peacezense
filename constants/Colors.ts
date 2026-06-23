@@ -1,6 +1,8 @@
 const primary = '#6B4E9B';
 const secondary = '#C9A962';
 const accent = '#9D7BD8';
+const onSecondary = '#1A1428';
+const onPrimary = '#FFFFFF';
 
 export default {
   light: {
@@ -15,6 +17,8 @@ export default {
     primary,
     secondary,
     accent,
+    onPrimary,
+    onSecondary,
     border: '#E0D8EC',
     gradientStart: '#F8F5F0',
     gradientEnd: '#EDE4F5',
@@ -31,6 +35,8 @@ export default {
     primary: accent,
     secondary,
     accent,
+    onPrimary,
+    onSecondary,
     border: '#3D3450',
     gradientStart: '#1A1428',
     gradientEnd: '#2D1F42',

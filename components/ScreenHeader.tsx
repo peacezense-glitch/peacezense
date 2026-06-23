@@ -1,7 +1,9 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
+import { spacing } from '@/constants/Theme';
 
 interface ScreenHeaderProps {
   title: string;
@@ -12,10 +14,11 @@ interface ScreenHeaderProps {
 export default function ScreenHeader({ title, subtitle, color }: ScreenHeaderProps) {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
+  const insets = useSafeAreaInsets();
 
   return (
-    <View style={styles.container}>
-      <Text style={[styles.title, color ? { color } : undefined]}>{title}</Text>
+    <View style={[styles.container, { paddingTop: Math.max(insets.top, Platform.OS === 'web' ? 16 : 8) }]}>
+      <Text style={[styles.title, { color: color ?? colors.text }]}>{title}</Text>
       {subtitle && (
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{subtitle}</Text>
       )}
@@ -25,18 +28,17 @@ export default function ScreenHeader({ title, subtitle, color }: ScreenHeaderPro
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 16,
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.lg,
   },
   title: {
     fontSize: 28,
     fontWeight: '800',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   subtitle: {
     fontSize: 14,
-    marginTop: 4,
-    lineHeight: 20,
+    marginTop: spacing.sm,
+    lineHeight: 22,
   },
 });

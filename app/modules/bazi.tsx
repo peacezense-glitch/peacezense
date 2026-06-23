@@ -78,8 +78,8 @@ export default function BaziScreen() {
         onPress={() => router.push('/modules/bazi-date' as never)}
         style={[styles.zeriBtn, { backgroundColor: colors.secondary }]}
       >
-        <Text style={styles.zeriBtnTitle}>📅 八字擇日</Text>
-        <Text style={styles.zeriBtnDesc}>結婚、搬家、開業… 依命盤挑選良辰吉日</Text>
+        <Text style={[styles.zeriBtnTitle, { color: colors.onSecondary }]}>📅 八字擇日</Text>
+        <Text style={[styles.zeriBtnDesc, { color: colors.onSecondary }]}>結婚、搬家、開業… 依命盤挑選良辰吉日</Text>
       </Pressable>
 
       <InfoCard title="命盤四柱">
@@ -148,9 +148,9 @@ export default function BaziScreen() {
           style={[styles.exportBtn, { backgroundColor: colors.secondary }]}
         >
           {exporting ? (
-            <ActivityIndicator color="#1A1428" />
+            <ActivityIndicator color={colors.onSecondary} />
           ) : (
-            <Text style={styles.exportText}>匯出命之書 PDF</Text>
+            <Text style={[styles.exportText, { color: colors.onSecondary }]}>匯出命之書 PDF</Text>
           )}
         </Pressable>
       </PremiumGate>
@@ -209,12 +209,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  exportText: { color: '#1A1428', fontWeight: '700', fontSize: 15 },
+  exportText: { fontWeight: '700', fontSize: 15 },
   zeriBtn: {
     padding: 16,
     borderRadius: 14,
     marginBottom: 16,
   },
-  zeriBtnTitle: { color: '#1A1428', fontSize: 17, fontWeight: '800' },
-  zeriBtnDesc: { color: '#1A1428', fontSize: 13, marginTop: 4, opacity: 0.8 },
+  zeriBtnTitle: { fontSize: 17, fontWeight: '800' },
+  zeriBtnDesc: { fontSize: 13, marginTop: 4, opacity: 0.8 },
 });

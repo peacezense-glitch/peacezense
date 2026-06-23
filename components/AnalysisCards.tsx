@@ -4,13 +4,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { LifeAnalysisTopic } from '@/types';
 
-const ELEMENT_COLORS: Record<string, string> = {
-  木: '#2E7D5A',
-  火: '#D4763A',
-  土: '#8B7355',
-  金: '#C9A962',
-  水: '#4A6FA5',
-};
+import { ELEMENT_COLORS } from '@/constants/Theme';
 
 interface ElementBarChartProps {
   balance: Record<string, number>;

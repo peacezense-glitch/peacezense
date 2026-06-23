@@ -14,12 +14,7 @@ import {
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 
-const RATING_COLORS: Record<string, string> = {
-  大吉: '#2E7D5A',
-  吉: '#6B4E9B',
-  平: '#C9A962',
-  凶: '#8B2942',
-};
+import { RATING_COLORS } from '@/constants/Theme';
 
 export default function BaziDateScreen() {
   const { profile } = useUserProfile();

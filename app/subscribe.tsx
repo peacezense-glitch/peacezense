@@ -8,8 +8,10 @@ import { useSubscription } from '@/context/SubscriptionContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { CURRENCIES, getPlanFeatures, PLAN_PRICES, formatPrice } from '@/constants/Pricing';
 import { setFallbackCurrency } from '@/lib/purchases';
+import GradientBackground from '@/components/GradientBackground';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
+import { cardShadow, radius } from '@/constants/Theme';
 
 export default function SubscribeScreen() {
   const { upgrade, isPremium, restore, packages, purchasesAvailable } = useSubscription();
@@ -75,14 +77,15 @@ export default function SubscribeScreen() {
   };
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={styles.content}
-    >
-      <LinearGradient
-        colors={[colors.primary + '40', colors.background]}
-        style={styles.hero}
+    <GradientBackground>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
       >
+        <LinearGradient
+          colors={[colors.primary + '45', colors.secondary + '20', 'transparent']}
+          style={[styles.hero, cardShadow(colorScheme)]}
+        >
         <SymbolView
           name={{ ios: 'crown.fill', android: 'star', web: 'star' }}
           tintColor={colors.secondary}
@@ -107,7 +110,7 @@ export default function SubscribeScreen() {
               },
             ]}
           >
-            <Text style={{ color: currency === c.code ? '#fff' : colors.text, fontWeight: '600' }}>
+            <Text style={{ color: currency === c.code ? colors.onPrimary : colors.text, fontWeight: '600' }}>
               {c.label}
             </Text>
           </Pressable>
@@ -127,6 +130,7 @@ export default function SubscribeScreen() {
           disabled={!!loading}
           style={({ pressed }) => [
             styles.planCard,
+            cardShadow(colorScheme),
             {
               backgroundColor: colors.card,
               borderColor: plan.popular ? colors.secondary : colors.border,
@@ -136,7 +140,7 @@ export default function SubscribeScreen() {
         >
           {plan.popular && (
             <View style={[styles.popularBadge, { backgroundColor: colors.secondary }]}>
-              <Text style={styles.popularText}>最受歡迎</Text>
+              <Text style={[styles.popularText, { color: colors.onSecondary }]}>最受歡迎</Text>
             </View>
           )}
           <Text style={styles.planName}>{plan.name}</Text>
@@ -172,7 +176,8 @@ export default function SubscribeScreen() {
           <Text style={[styles.restoreText, { color: colors.accent }]}>恢復購買</Text>
         )}
       </Pressable>
-    </ScrollView>
+      </ScrollView>
+    </GradientBackground>
   );
 }
 
@@ -191,7 +196,7 @@ const styles = StyleSheet.create({
     position: 'absolute', top: -10, right: 16,
     paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12,
   },
-  popularText: { color: '#1A1428', fontSize: 11, fontWeight: '700' },
+  popularText: { fontSize: 11, fontWeight: '700' },
   planName: { fontSize: 20, fontWeight: '700', marginBottom: 8 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4, marginBottom: 16, minHeight: 40 },
   price: { fontSize: 32, fontWeight: '800' },

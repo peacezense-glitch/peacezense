@@ -1,6 +1,8 @@
+import { Platform, StyleSheet } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 import { Tabs } from 'expo-router';
 import Colors from '@/constants/Colors';
+import { tabBarShadow } from '@/constants/Theme';
 import { useColorScheme } from '@/components/useColorScheme';
 
 export default function TabLayout() {
@@ -12,12 +14,29 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: colors.tint,
         tabBarInactiveTintColor: colors.tabIconDefault,
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
+          marginBottom: Platform.OS === 'ios' ? 0 : 4,
+        },
         tabBarStyle: {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          height: Platform.OS === 'ios' ? 88 : 64,
+          paddingTop: 6,
+          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
+          ...tabBarShadow(colorScheme),
         },
-        headerStyle: { backgroundColor: colors.background },
+        headerStyle: {
+          backgroundColor: colors.background,
+        },
         headerTintColor: colors.text,
+        headerTitleStyle: {
+          fontWeight: '700',
+          fontSize: 18,
+        },
+        headerShadowVisible: false,
       }}
     >
       <Tabs.Screen
@@ -29,7 +48,7 @@ export default function TabLayout() {
             <SymbolView
               name={{ ios: 'house.fill', android: 'home', web: 'home' }}
               tintColor={color}
-              size={26}
+              size={24}
             />
           ),
         }}
@@ -38,12 +57,12 @@ export default function TabLayout() {
         name="life"
         options={{
           title: '人生',
-          headerTitle: '人生層面',
+          headerShown: false,
           tabBarIcon: ({ color }) => (
             <SymbolView
               name={{ ios: 'person.fill', android: 'person', web: 'person' }}
               tintColor={color}
-              size={26}
+              size={24}
             />
           ),
         }}
@@ -52,12 +71,12 @@ export default function TabLayout() {
         name="events"
         options={{
           title: '事件',
-          headerTitle: '事件層面',
+          headerShown: false,
           tabBarIcon: ({ color }) => (
             <SymbolView
               name={{ ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' }}
               tintColor={color}
-              size={26}
+              size={24}
             />
           ),
         }}
@@ -71,7 +90,7 @@ export default function TabLayout() {
             <SymbolView
               name={{ ios: 'bubble.left.and.bubble.right.fill', android: 'chat', web: 'chat' }}
               tintColor={color}
-              size={26}
+              size={24}
             />
           ),
         }}
@@ -85,7 +104,7 @@ export default function TabLayout() {
             <SymbolView
               name={{ ios: 'gearshape.fill', android: 'settings', web: 'settings' }}
               tintColor={color}
-              size={26}
+              size={24}
             />
           ),
         }}
