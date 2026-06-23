@@ -9,12 +9,16 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Text } from '@/components/Themed';
+import { useRouter } from 'expo-router';
 import { useUserProfile } from '@/context/UserProfileContext';
+import { useSubscription } from '@/context/SubscriptionContext';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 
 export default function ProfileScreen() {
   const { profile, updateProfile } = useUserProfile();
+  const { isPremium } = useSubscription();
+  const router = useRouter();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
 
@@ -132,6 +136,15 @@ export default function ProfileScreen() {
         </View>
       </View>
 
+      {!isPremium && (
+        <Pressable
+          onPress={() => router.push('/subscribe' as never)}
+          style={[styles.upgradeBtn, { backgroundColor: colors.secondary }]}
+        >
+          <Text style={styles.upgradeBtnText}>升級會員解鎖完整分析</Text>
+        </Pressable>
+      )}
+
       <Text style={[styles.note, { color: colors.textSecondary }]}>
         資料僅儲存於本機裝置，不會上傳至任何伺服器。
       </Text>
@@ -182,6 +195,17 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     borderWidth: 1,
+  },
+  upgradeBtn: {
+    marginTop: 20,
+    padding: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  upgradeBtnText: {
+    color: '#1A1428',
+    fontWeight: '700',
+    fontSize: 15,
   },
   note: {
     fontSize: 12,

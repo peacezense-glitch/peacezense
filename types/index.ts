@@ -30,6 +30,69 @@ export interface BaziChart {
   dayMasterElement: string;
 }
 
+export interface BaziTenGod {
+  pillar: string;
+  stem: string;
+  god: string;
+  hidden: string;
+  branchGod: string;
+}
+
+export interface BaziLuckPillar {
+  ganZhi: string;
+  startAge: number;
+  endAge: number;
+}
+
+export interface BaziFullReport {
+  chart: BaziChart;
+  tenGods: BaziTenGod[];
+  naYin: { year: string; month: string; day: string; hour: string };
+  mingGong: string;
+  shenGong: string;
+  taiYuan: string;
+  luckPillars: BaziLuckPillar[];
+  currentLuck: BaziLuckPillar | null;
+  currentAge: number;
+  solarDate: string;
+  lunarDate: string;
+  jieQi: string;
+}
+
+export interface UsefulGodAnalysis {
+  dayMaster: string;
+  dayMasterElement: string;
+  strength: string;
+  isStrong: boolean;
+  usefulElements: string[];
+  avoidElements: string[];
+  dominantElement: string;
+  dominantCount: number;
+  lackingElements: string[];
+  elementTraits: Record<string, string>;
+  summary: string;
+}
+
+export interface LifeAnalysisTopic {
+  id: string;
+  title: string;
+  icon: string;
+  summary: string;
+  detail: string;
+  keywords: string[];
+}
+
+export type SubscriptionTier = 'free' | 'premium';
+
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  price: string;
+  period: string;
+  features: string[];
+  popular?: boolean;
+}
+
 export interface ZodiacSign {
   name: string;
   nameEn: string;
