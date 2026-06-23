@@ -108,6 +108,40 @@ export interface ZodiacSign {
   traits: string;
 }
 
+export interface NatalPlanet {
+  id: string;
+  name: string;
+  symbol: string;
+  longitude: number;
+  sign: ZodiacSign;
+  degreeLabel: string;
+}
+
+export interface NatalAngle {
+  longitude: number;
+  sign: ZodiacSign;
+  degreeLabel: string;
+}
+
+export interface NatalHouse {
+  number: number;
+  cuspLongitude: number;
+  sign: ZodiacSign;
+}
+
+export interface NatalChart {
+  planets: NatalPlanet[];
+  ascendant: NatalAngle;
+  midheaven: NatalAngle;
+  houses: NatalHouse[];
+  sunSign: ZodiacSign;
+  moonSign: ZodiacSign;
+  risingSign: ZodiacSign;
+  birthDateTime: string;
+  latitude: number;
+  longitude: number;
+}
+
 export interface MayanSign {
   number: number;
   daySign: string;

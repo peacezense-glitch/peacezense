@@ -1,6 +1,6 @@
 import { ZodiacSign } from '@/types';
 
-const SIGNS: ZodiacSign[] = [
+export const SIGNS: ZodiacSign[] = [
   { name: '牡羊座', nameEn: 'Aries', symbol: '♈', element: '火', dates: '3/21 - 4/19', traits: '勇敢、熱情、開創力強' },
   { name: '金牛座', nameEn: 'Taurus', symbol: '♉', element: '土', dates: '4/20 - 5/20', traits: '穩重、務實、感官敏銳' },
   { name: '雙子座', nameEn: 'Gemini', symbol: '♊', element: '風', dates: '5/21 - 6/20', traits: '靈活、好奇、溝通能力佳' },
@@ -15,43 +15,28 @@ const SIGNS: ZodiacSign[] = [
   { name: '雙魚座', nameEn: 'Pisces', symbol: '♓', element: '水', dates: '2/19 - 3/20', traits: '夢幻、同理、靈性直覺' },
 ];
 
-const SIGN_BOUNDARIES = [
-  [3, 21], [4, 20], [5, 21], [6, 21], [7, 23], [8, 23],
-  [9, 23], [10, 23], [11, 22], [12, 22], [1, 20], [2, 19],
+export const SIGN_COLORS = [
+  '#E74C3C', '#2ECC71', '#F39C12', '#3498DB',
+  '#E74C3C', '#2ECC71', '#F39C12', '#3498DB',
+  '#E74C3C', '#2ECC71', '#F39C12', '#3498DB',
 ];
 
-export function getSunSign(birthDate: string): ZodiacSign {
-  const [, month, day] = birthDate.split('-').map(Number);
-  let index = 11;
-  for (let i = 0; i < 12; i++) {
-    const [m, d] = SIGN_BOUNDARIES[i];
-    if (month === m && day >= d) index = i;
-    else if (month === ((m % 12) + 1) && day < SIGN_BOUNDARIES[(i + 1) % 12][1]) index = i;
-  }
-  if (month === 12 && day >= 22) index = 9;
-  if (month === 1 && day < 20) index = 9;
-  if (month === 1 && day >= 20) index = 10;
-  if (month === 2 && day < 19) index = 10;
-  if (month === 2 && day >= 19) index = 11;
-  if (month === 3 && day < 21) index = 11;
+export const ELEMENT_COLORS: Record<string, string> = {
+  火: '#E74C3C',
+  土: '#8B7355',
+  風: '#F39C12',
+  水: '#3498DB',
+};
+
+export function longitudeToSign(longitude: number): ZodiacSign {
+  const index = Math.floor(((longitude % 360) + 360) % 360 / 30) % 12;
   return SIGNS[index];
 }
 
-export function getRisingSignApprox(birthTime: string): ZodiacSign {
-  const [hour] = birthTime.split(':').map(Number);
-  const index = Math.floor(((hour + 6) % 24) / 2) % 12;
-  return SIGNS[index];
-}
-
-export function getMoonSignApprox(birthDate: string): ZodiacSign {
-  const date = new Date(birthDate);
-  const dayOfYear = Math.floor(
-    (date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000
-  );
-  const index = Math.floor((dayOfYear * 12) / 365) % 12;
-  return SIGNS[index];
-}
-
-export function getAstrologyReading(sun: ZodiacSign, moon: ZodiacSign, rising: ZodiacSign): string {
-  return `太陽${sun.name}賦予你${sun.traits}的特質；月亮${moon.name}影響你的內在情感世界；上升${rising.name}則是你展現給世界的面貌。三者結合，勾勒出你獨特的宇宙藍圖。`;
+export function formatDegree(longitude: number): string {
+  const norm = ((longitude % 360) + 360) % 360;
+  const signIndex = Math.floor(norm / 30);
+  const deg = Math.floor(norm % 30);
+  const min = Math.floor((norm % 1) * 60);
+  return `${deg}°${String(min).padStart(2, '0')}' ${SIGNS[signIndex].symbol}`;
 }

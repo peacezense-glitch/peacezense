@@ -9,7 +9,10 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.peacezense.app"
+      "bundleIdentifier": "com.peacezense.app",
+      "infoPlist": {
+        "NSUserTrackingUsageDescription": "用於提供個人化命理服務體驗"
+      }
     },
     "android": {
       "package": "com.peacezense.app",

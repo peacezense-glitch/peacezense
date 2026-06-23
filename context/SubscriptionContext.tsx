@@ -2,15 +2,25 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SubscriptionTier } from '@/types';
 import { FeatureKey, isFeatureFree } from '@/constants/Features';
-import { purchaseProduct, restorePurchases, initPurchases } from '@/lib/purchases';
+import {
+  initPurchases,
+  purchasePackage,
+  restorePurchases,
+  loadOfferings,
+  getCachedPackages,
+  isPurchasesAvailable,
+  SubscriptionPackage,
+} from '@/lib/purchases';
 
 interface SubscriptionContextType {
   tier: SubscriptionTier;
   isPremium: boolean;
   canAccess: (feature: FeatureKey) => boolean;
-  upgrade: (productId?: string) => Promise<void>;
-  restore: () => Promise<void>;
+  upgrade: (packageId?: string) => Promise<{ success: boolean; error?: string }>;
+  restore: () => Promise<boolean>;
+  packages: SubscriptionPackage[];
   isLoaded: boolean;
+  purchasesAvailable: boolean;
 }
 
 const STORAGE_KEY = '@peacezense_subscription';
@@ -19,21 +29,27 @@ const SubscriptionContext = createContext<SubscriptionContextType>({
   tier: 'free',
   isPremium: false,
   canAccess: () => false,
-  upgrade: async () => {},
-  restore: async () => {},
+  upgrade: async () => ({ success: false }),
+  restore: async () => false,
+  packages: [],
   isLoaded: false,
+  purchasesAvailable: false,
 });
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
   const [tier, setTier] = useState<SubscriptionTier>('free');
+  const [packages, setPackages] = useState<SubscriptionPackage[]>(getCachedPackages());
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    initPurchases();
-    restorePurchases().then((premium) => {
+    (async () => {
+      await initPurchases();
+      const pkgs = await loadOfferings();
+      setPackages(pkgs);
+      const premium = await restorePurchases();
       if (premium) setTier('premium');
       setIsLoaded(true);
-    });
+    })();
   }, []);
 
   const canAccess = useCallback(
@@ -41,12 +57,14 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     [tier],
   );
 
-  const upgrade = useCallback(async (productId = 'peacezense_yearly') => {
-    const result = await purchaseProduct(productId);
+  const upgrade = useCallback(async (packageId = 'yearly') => {
+    const result = await purchasePackage(packageId);
     if (result.success) {
       setTier('premium');
       await AsyncStorage.setItem(STORAGE_KEY, 'premium');
+      return { success: true };
     }
+    return { success: false, error: result.error };
   }, []);
 
   const restore = useCallback(async () => {
@@ -55,6 +73,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       setTier('premium');
       await AsyncStorage.setItem(STORAGE_KEY, 'premium');
     }
+    return premium;
   }, []);
 
   return (
@@ -65,7 +84,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         canAccess,
         upgrade,
         restore,
+        packages,
         isLoaded,
+        purchasesAvailable: isPurchasesAvailable(),
       }}
     >
       {children}

@@ -51,6 +51,29 @@ app/modules/       # 七大命理模組
 app/subscribe.tsx  # 會員訂閱頁
 ```
 
-## 授權
+## RevenueCat 訂閱設定
 
-MIT License
+1. 至 [RevenueCat](https://app.revenuecat.com) 建立專案
+2. 在 App Store Connect / Google Play 建立訂閱產品
+3. 建立 Entitlement：`premium`
+4. 建立 Offering，加入 monthly / yearly packages
+5. 複製 `.env.example` 為 `.env`，填入 API Keys：
+
+```bash
+cp .env.example .env
+```
+
+6. 使用 EAS Build 打包（RevenueCat 需原生建置）：
+
+```bash
+npx eas build --platform ios
+npx eas build --platform android
+```
+
+未設定 API Key 時，開發模式可點擊方案體驗會員功能。
+
+## 西洋占星
+
+- 使用 `astronomy-engine` 計算七政四餘行星位置
+- SVG 本命盤視覺化（上升點置左、十二宮位）
+- 會員解鎖完整星盤與行星列表

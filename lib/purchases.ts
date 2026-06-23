@@ -1,15 +1,14 @@
-/**
- * 訂閱服務層 — 預留 RevenueCat 整合
- *
- * 正式上線步驟：
- * 1. npm install react-native-purchases
- * 2. 在 RevenueCat 建立 monthly / yearly 產品
- * 3. 設定 EXPO_PUBLIC_REVENUECAT_IOS_KEY / ANDROID_KEY
- * 4. 將 USE_MOCK 設為 false
- */
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Purchases, {
+  LOG_LEVEL,
+  PurchasesPackage,
+  CustomerInfo,
+} from 'react-native-purchases';
 
-const USE_MOCK = true;
+const IOS_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ?? '';
+const ANDROID_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ?? '';
+const ENTITLEMENT_ID = 'premium';
 const STORAGE_KEY = '@peacezense_subscription';
 
 export const PRODUCT_IDS = {
@@ -21,40 +20,164 @@ export interface PurchaseResult {
   success: boolean;
   productId?: string;
   error?: string;
+  userCancelled?: boolean;
 }
 
-export async function initPurchases(): Promise<void> {
-  if (USE_MOCK) return;
-  // const Purchases = require('react-native-purchases').default;
-  // await Purchases.configure({ apiKey: Platform.OS === 'ios' ? IOS_KEY : ANDROID_KEY });
+export interface SubscriptionPackage {
+  id: string;
+  title: string;
+  price: string;
+  period: string;
+  rcPackage?: PurchasesPackage;
 }
 
-export async function purchaseProduct(productId: string): Promise<PurchaseResult> {
-  if (USE_MOCK) {
-    await AsyncStorage.setItem(STORAGE_KEY, 'premium');
-    return { success: true, productId };
+let initialized = false;
+let cachedPackages: SubscriptionPackage[] = [];
+
+export function isPurchasesAvailable(): boolean {
+  if (Platform.OS === 'web') return false;
+  return Platform.OS === 'ios' ? !!IOS_KEY : !!ANDROID_KEY;
+}
+
+function hasPremiumEntitlement(info: CustomerInfo): boolean {
+  return info.entitlements.active[ENTITLEMENT_ID] !== undefined;
+}
+
+export async function initPurchases(userId?: string): Promise<void> {
+  if (initialized) return;
+
+  if (!isPurchasesAvailable()) {
+    initialized = true;
+    return;
   }
-  // const Purchases = require('react-native-purchases').default;
-  // const { customerInfo } = await Purchases.purchaseProduct(productId);
-  // return { success: customerInfo.entitlements.active['premium'] !== undefined, productId };
-  return { success: false, error: 'Purchases not configured' };
+
+  try {
+    if (__DEV__) {
+      Purchases.setLogLevel(LOG_LEVEL.DEBUG);
+    }
+
+    const apiKey = Platform.OS === 'ios' ? IOS_KEY : ANDROID_KEY;
+    Purchases.configure({ apiKey, appUserID: userId });
+
+    initialized = true;
+    await loadOfferings();
+  } catch (e) {
+    console.warn('[Purchases] init failed:', e);
+    initialized = true;
+  }
+}
+
+export async function loadOfferings(): Promise<SubscriptionPackage[]> {
+  if (!isPurchasesAvailable()) {
+    cachedPackages = getFallbackPackages();
+    return cachedPackages;
+  }
+
+  try {
+    const offerings = await Purchases.getOfferings();
+    const current = offerings.current;
+
+    if (!current) {
+      cachedPackages = getFallbackPackages();
+      return cachedPackages;
+    }
+
+    cachedPackages = current.availablePackages.map((pkg) => {
+      const isYearly = pkg.packageType === 'ANNUAL' || pkg.identifier.includes('year');
+      return {
+        id: isYearly ? 'yearly' : 'monthly',
+        title: isYearly ? '年度會員' : '月度會員',
+        price: pkg.product.priceString,
+        period: isYearly ? '/年' : '/月',
+        rcPackage: pkg,
+      };
+    });
+
+    if (cachedPackages.length === 0) {
+      cachedPackages = getFallbackPackages();
+    }
+
+    return cachedPackages;
+  } catch (e) {
+    console.warn('[Purchases] loadOfferings failed:', e);
+    cachedPackages = getFallbackPackages();
+    return cachedPackages;
+  }
+}
+
+export function getCachedPackages(): SubscriptionPackage[] {
+  return cachedPackages.length > 0 ? cachedPackages : getFallbackPackages();
+}
+
+function getFallbackPackages(): SubscriptionPackage[] {
+  return [
+    { id: 'monthly', title: '月度會員', price: 'NT$ 299', period: '/月' },
+    { id: 'yearly', title: '年度會員', price: 'NT$ 1,999', period: '/年' },
+  ];
+}
+
+export async function purchasePackage(packageId: string): Promise<PurchaseResult> {
+  if (!isPurchasesAvailable()) {
+    await AsyncStorage.setItem(STORAGE_KEY, 'premium');
+    return { success: true, productId: packageId };
+  }
+
+  const pkg = cachedPackages.find((p) => p.id === packageId);
+  if (!pkg?.rcPackage) {
+    return { success: false, error: '找不到訂閱方案，請稍後再試' };
+  }
+
+  try {
+    const { customerInfo } = await Purchases.purchasePackage(pkg.rcPackage);
+    const success = hasPremiumEntitlement(customerInfo);
+    if (success) {
+      await AsyncStorage.setItem(STORAGE_KEY, 'premium');
+    }
+    return { success, productId: packageId };
+  } catch (e: unknown) {
+    const err = e as { userCancelled?: boolean; message?: string };
+    if (err.userCancelled) {
+      return { success: false, userCancelled: true };
+    }
+    return { success: false, error: err.message ?? '購買失敗' };
+  }
+}
+
+/** @deprecated Use purchasePackage instead */
+export async function purchaseProduct(productId: string): Promise<PurchaseResult> {
+  const packageId = productId.includes('year') ? 'yearly' : 'monthly';
+  return purchasePackage(packageId);
 }
 
 export async function restorePurchases(): Promise<boolean> {
-  if (USE_MOCK) {
+  if (!isPurchasesAvailable()) {
     const data = await AsyncStorage.getItem(STORAGE_KEY);
     return data === 'premium';
   }
-  // const Purchases = require('react-native-purchases').default;
-  // const info = await Purchases.restorePurchases();
-  // return info.entitlements.active['premium'] !== undefined;
-  return false;
+
+  try {
+    const info = await Purchases.restorePurchases();
+    const premium = hasPremiumEntitlement(info);
+    if (premium) {
+      await AsyncStorage.setItem(STORAGE_KEY, 'premium');
+    }
+    return premium;
+  } catch (e) {
+    console.warn('[Purchases] restore failed:', e);
+    return false;
+  }
 }
 
 export async function checkPremiumStatus(): Promise<boolean> {
-  if (USE_MOCK) {
+  if (!isPurchasesAvailable()) {
     const data = await AsyncStorage.getItem(STORAGE_KEY);
     return data === 'premium';
   }
-  return restorePurchases();
+
+  try {
+    const info = await Purchases.getCustomerInfo();
+    return hasPremiumEntitlement(info);
+  } catch {
+    return restorePurchases();
+  }
 }
