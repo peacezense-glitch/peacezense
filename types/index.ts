@@ -4,6 +4,8 @@ export interface UserProfile {
   birthTime: string;
   birthPlace: string;
   gender: 'male' | 'female' | 'other';
+  longitude: number;
+  useTrueSolarTime: boolean;
 }
 
 export const DEFAULT_PROFILE: UserProfile = {
@@ -12,6 +14,8 @@ export const DEFAULT_PROFILE: UserProfile = {
   birthTime: '12:00',
   birthPlace: '台北',
   gender: 'other',
+  longitude: 121.5654,
+  useTrueSolarTime: true,
 };
 
 export interface BaziPillar {
@@ -57,6 +61,8 @@ export interface BaziFullReport {
   solarDate: string;
   lunarDate: string;
   jieQi: string;
+  solarTimeNote?: string;
+  correctedTime?: string;
 }
 
 export interface UsefulGodAnalysis {
@@ -165,5 +171,23 @@ export interface ZiWeiPalace {
 export interface ZiWeiChart {
   mingGong: string;
   shenGong: string;
+  bureau: string;
   palaces: ZiWeiPalace[];
+  gender: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: number;
+}
+
+export interface YearlyFlow {
+  year: number;
+  ganZhi: string;
+  stem: string;
+  branch: string;
+  summary: string;
+  topics: { area: string; rating: string; advice: string }[];
 }

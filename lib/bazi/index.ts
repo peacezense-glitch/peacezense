@@ -1,6 +1,7 @@
 export { calculateBaziFull, getElementBalance } from './engine';
 export { analyzeUsefulGod } from './usefulGod';
 export { generateLifeAnalysis } from './analysis';
+export { getYearlyFlow, getYearlyFlows } from './yearlyFlow';
 
 import { calculateBaziFull, getElementBalance } from './engine';
 import { analyzeUsefulGod } from './usefulGod';

@@ -23,7 +23,8 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY).then((data) => {
       if (data) {
-        setProfile({ ...DEFAULT_PROFILE, ...JSON.parse(data) });
+        const parsed = JSON.parse(data);
+        setProfile({ ...DEFAULT_PROFILE, ...parsed });
       }
       setIsLoaded(true);
     });

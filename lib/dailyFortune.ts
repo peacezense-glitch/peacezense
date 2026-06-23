@@ -33,6 +33,7 @@ export function getDailyFortune(
   birthDate: string,
   birthTime: string,
   gender: string,
+  options?: { longitude?: number; useTrueSolarTime?: boolean; birthPlace?: string },
 ): DailyFortune {
   const now = new Date();
   const solar = Solar.fromYmd(now.getFullYear(), now.getMonth() + 1, now.getDate());
@@ -40,7 +41,7 @@ export function getDailyFortune(
   const ec = lunar.getEightChar();
 
   const seed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
-  const report = calculateBaziFull(birthDate, birthTime, gender);
+  const report = calculateBaziFull(birthDate, birthTime, gender, options);
   const hex = castHexagram(seed);
 
   return {

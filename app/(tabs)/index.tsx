@@ -17,7 +17,16 @@ export default function HomeScreen() {
   const { isPremium } = useSubscription();
   const router = useRouter();
 
-  const fortune = getDailyFortune(profile.birthDate, profile.birthTime, profile.gender);
+  const fortune = getDailyFortune(
+    profile.birthDate,
+    profile.birthTime,
+    profile.gender,
+    {
+      longitude: profile.longitude,
+      useTrueSolarTime: profile.useTrueSolarTime,
+      birthPlace: profile.birthPlace,
+    },
+  );
 
   return (
     <ScrollView

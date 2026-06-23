@@ -14,6 +14,7 @@ import { useUserProfile } from '@/context/UserProfileContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
+import { CITY_PRESETS } from '@/constants/Cities';
 
 export default function ProfileScreen() {
   const { profile, updateProfile } = useUserProfile();
@@ -101,13 +102,52 @@ export default function ProfileScreen() {
         )}
 
         <Text style={[styles.label, { color: colors.textSecondary }]}>出生地點</Text>
-        <TextInput
-          style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-          value={profile.birthPlace}
-          onChangeText={(birthPlace) => updateProfile({ birthPlace })}
-          placeholder="城市名稱"
-          placeholderTextColor={colors.textSecondary}
-        />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.cityScroll}>
+          {CITY_PRESETS.map((city) => (
+            <Pressable
+              key={city.name}
+              onPress={() =>
+                updateProfile({
+                  birthPlace: city.name,
+                  longitude: city.longitude,
+                })
+              }
+              style={[
+                styles.cityChip,
+                {
+                  backgroundColor:
+                    profile.birthPlace === city.name ? colors.primary : colors.backgroundSecondary,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text
+                style={{
+                  color: profile.birthPlace === city.name ? '#fff' : colors.text,
+                  fontSize: 13,
+                }}
+              >
+                {city.name}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+
+        <Text style={[styles.label, { color: colors.textSecondary }]}>真太陽時校正</Text>
+        <Pressable
+          onPress={() => updateProfile({ useTrueSolarTime: !profile.useTrueSolarTime })}
+          style={[
+            styles.toggle,
+            {
+              backgroundColor: profile.useTrueSolarTime ? colors.primary + '25' : colors.backgroundSecondary,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Text style={{ color: colors.text }}>
+            {profile.useTrueSolarTime ? '✓ 已啟用' : '未啟用'}（經度 {profile.longitude.toFixed(1)}°）
+          </Text>
+        </Pressable>
 
         <Text style={[styles.label, { color: colors.textSecondary }]}>性別</Text>
         <View style={styles.genderRow}>
@@ -194,6 +234,19 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     alignItems: 'center',
+    borderWidth: 1,
+  },
+  cityScroll: { marginBottom: 4 },
+  cityChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginRight: 8,
+  },
+  toggle: {
+    padding: 12,
+    borderRadius: 10,
     borderWidth: 1,
   },
   upgradeBtn: {

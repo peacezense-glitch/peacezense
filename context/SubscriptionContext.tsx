@@ -2,12 +2,13 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SubscriptionTier } from '@/types';
 import { FeatureKey, isFeatureFree } from '@/constants/Features';
+import { purchaseProduct, restorePurchases, initPurchases } from '@/lib/purchases';
 
 interface SubscriptionContextType {
   tier: SubscriptionTier;
   isPremium: boolean;
   canAccess: (feature: FeatureKey) => boolean;
-  upgrade: () => void;
+  upgrade: (productId?: string) => Promise<void>;
   restore: () => Promise<void>;
   isLoaded: boolean;
 }
@@ -18,7 +19,7 @@ const SubscriptionContext = createContext<SubscriptionContextType>({
   tier: 'free',
   isPremium: false,
   canAccess: () => false,
-  upgrade: () => {},
+  upgrade: async () => {},
   restore: async () => {},
   isLoaded: false,
 });
@@ -28,8 +29,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then((data) => {
-      if (data === 'premium') setTier('premium');
+    initPurchases();
+    restorePurchases().then((premium) => {
+      if (premium) setTier('premium');
       setIsLoaded(true);
     });
   }, []);
@@ -39,14 +41,20 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     [tier],
   );
 
-  const upgrade = useCallback(() => {
-    setTier('premium');
-    AsyncStorage.setItem(STORAGE_KEY, 'premium');
+  const upgrade = useCallback(async (productId = 'peacezense_yearly') => {
+    const result = await purchaseProduct(productId);
+    if (result.success) {
+      setTier('premium');
+      await AsyncStorage.setItem(STORAGE_KEY, 'premium');
+    }
   }, []);
 
   const restore = useCallback(async () => {
-    const data = await AsyncStorage.getItem(STORAGE_KEY);
-    if (data === 'premium') setTier('premium');
+    const premium = await restorePurchases();
+    if (premium) {
+      setTier('premium');
+      await AsyncStorage.setItem(STORAGE_KEY, 'premium');
+    }
   }, []);
 
   return (

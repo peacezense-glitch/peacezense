@@ -9,14 +9,13 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 
 export default function SubscribeScreen() {
-  const { upgrade, isPremium } = useSubscription();
+  const { upgrade, isPremium, restore } = useSubscription();
   const router = useRouter();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
 
-  const handleSubscribe = (planId: string) => {
-    // TODO: Integrate RevenueCat / App Store / Google Play
-    upgrade();
+  const handleSubscribe = async (planId: string) => {
+    await upgrade(planId === 'yearly' ? 'peacezense_yearly' : 'peacezense_monthly');
     router.back();
   };
 
@@ -83,9 +82,13 @@ export default function SubscribeScreen() {
 
       <Text style={[styles.note, { color: colors.textSecondary }]}>
         免費版已包含八字命盤、十神、喜用神與五大人生專題分析。{'\n'}
-        升級後解鎖大運流年、紫微全盤、星盤等進階功能。{'\n'}
+        升級後解鎖大運流年、紫微全盤、AI 命理師、PDF 匯出等進階功能。{'\n'}
         付款功能即將上線，目前可體驗完整會員功能。
       </Text>
+
+      <Pressable onPress={() => restore()} style={styles.restoreBtn}>
+        <Text style={[styles.restoreText, { color: colors.accent }]}>恢復購買</Text>
+      </Pressable>
     </ScrollView>
   );
 }
@@ -121,4 +124,6 @@ const styles = StyleSheet.create({
   featureRow: { flexDirection: 'row', gap: 8, marginBottom: 8, alignItems: 'flex-start' },
   featureText: { fontSize: 14, flex: 1, lineHeight: 20 },
   note: { fontSize: 12, lineHeight: 20, textAlign: 'center', marginTop: 8 },
+  restoreBtn: { alignItems: 'center', marginTop: 16, padding: 12 },
+  restoreText: { fontSize: 14, fontWeight: '600' },
 });

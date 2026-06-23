@@ -9,7 +9,7 @@
 | 層級 | 功能 |
 |------|------|
 | **免費** | 八字命盤、十神、喜用神、五大人生專題、每日運勢、易經占卜 |
-| **會員** | 大運流年、紫微全盤、本命星盤、人類圖、占卜紀錄、奇門擇日、AI 對話（規劃中） |
+| **會員** | 大運流年、流年運勢、紫微全盤、AI 命理師對話、命書 PDF 匯出 |
 
 ## 功能模組
 
@@ -28,8 +28,10 @@
 
 - Expo SDK 56 + React Native 0.85 + TypeScript
 - `lunar-javascript` — 專業農曆／八字排盤引擎
-- Expo Router + AsyncStorage
-- 會員系統（SubscriptionContext，預留 App Store / RevenueCat 整合）
+- 真太陽時校正（出生地經度）
+- AI 命理師（規則引擎 + 可選 OpenAI）
+- `expo-print` — 命書 PDF 匯出
+- 會員系統（預留 RevenueCat 整合）
 
 ## 開始使用
 

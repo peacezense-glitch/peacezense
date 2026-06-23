@@ -7,6 +7,7 @@ declare module 'lunar-javascript' {
   }
   export class Lunar {
     getEightChar(): EightChar;
+    getMonth(): number;
     toString(): string;
     getJieQi(): string;
     getPrevJieQi(): { getName(): string } | null;

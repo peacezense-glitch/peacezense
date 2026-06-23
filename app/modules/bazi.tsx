@@ -1,4 +1,5 @@
-import { StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { Text } from '@/components/Themed';
 import BaziChartDisplay from '@/components/BaziChartDisplay';
 import PremiumGate from '@/components/PremiumGate';
@@ -6,30 +7,70 @@ import { ElementBarChart, LifeAnalysisCard } from '@/components/AnalysisCards';
 import LuckPillarChart from '@/components/LuckPillarChart';
 import { InfoCard, InfoRow, ModuleScreenLayout } from '@/components/InfoCard';
 import { useUserProfile } from '@/context/UserProfileContext';
+import { useSubscription } from '@/context/SubscriptionContext';
 import {
   calculateBaziFull,
   getElementBalance,
   analyzeUsefulGod,
   generateLifeAnalysis,
+  getYearlyFlows,
 } from '@/lib/bazi';
+import { exportBaziReportPdf } from '@/lib/exportBaziPdf';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 
 export default function BaziScreen() {
   const { profile } = useUserProfile();
+  const { canAccess } = useSubscription();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
+  const [exporting, setExporting] = useState(false);
 
-  const report = calculateBaziFull(profile.birthDate, profile.birthTime, profile.gender);
+  const baziOptions = {
+    longitude: profile.longitude,
+    useTrueSolarTime: profile.useTrueSolarTime,
+    birthPlace: profile.birthPlace,
+  };
+
+  const report = calculateBaziFull(
+    profile.birthDate,
+    profile.birthTime,
+    profile.gender,
+    baziOptions,
+  );
   const balance = getElementBalance(report.chart);
   const useful = analyzeUsefulGod(report.chart);
   const lifeTopics = generateLifeAnalysis(report);
+  const yearlyFlows = getYearlyFlows(
+    profile.birthDate,
+    profile.birthTime,
+    profile.gender,
+    baziOptions,
+    3,
+  );
+
+  const handleExport = async () => {
+    if (!canAccess('bazi.fullReport')) return;
+    setExporting(true);
+    try {
+      await exportBaziReportPdf(report, profile.name);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <ModuleScreenLayout>
       <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
         四柱八字 · 專業命盤解析（節氣換月）
       </Text>
+
+      {report.solarTimeNote && (
+        <Text style={[styles.solarNote, { color: colors.accent }]}>
+          {report.solarTimeNote}
+          {report.correctedTime ? ` → 校正後 ${report.correctedTime}` : ''}
+        </Text>
+      )}
 
       <InfoCard title="命盤四柱">
         <BaziChartDisplay
@@ -90,6 +131,37 @@ export default function BaziScreen() {
         <LifeAnalysisCard key={topic.id} topic={topic} index={i} />
       ))}
 
+      <PremiumGate feature="bazi.fullReport">
+        <Pressable
+          onPress={handleExport}
+          disabled={exporting}
+          style={[styles.exportBtn, { backgroundColor: colors.secondary }]}
+        >
+          {exporting ? (
+            <ActivityIndicator color="#1A1428" />
+          ) : (
+            <Text style={styles.exportText}>匯出命之書 PDF</Text>
+          )}
+        </Pressable>
+      </PremiumGate>
+
+      <Text style={[styles.sectionTitle, { color: colors.secondary, marginTop: 8 }]}>
+        流年運勢
+      </Text>
+
+      <PremiumGate feature="bazi.yearlyFlow">
+        {yearlyFlows.map((flow) => (
+          <InfoCard key={flow.year} title={`${flow.year}年 ${flow.ganZhi}`}>
+            <Text style={[styles.body, { color: colors.textSecondary, marginBottom: 8 }]}>
+              {flow.summary}
+            </Text>
+            {flow.topics.map((t) => (
+              <InfoRow key={t.area} label={`${t.area} ${t.rating}`} value={t.advice} />
+            ))}
+          </InfoCard>
+        ))}
+      </PremiumGate>
+
       <Text style={[styles.sectionTitle, { color: colors.secondary, marginTop: 8 }]}>
         大運流年
       </Text>
@@ -116,8 +188,16 @@ export default function BaziScreen() {
 }
 
 const styles = StyleSheet.create({
-  subtitle: { fontSize: 14, marginBottom: 16 },
+  subtitle: { fontSize: 14, marginBottom: 8 },
+  solarNote: { fontSize: 12, marginBottom: 16, lineHeight: 18 },
   body: { fontSize: 14, lineHeight: 22 },
   sectionTitle: { fontSize: 20, fontWeight: '800', marginBottom: 4 },
   sectionDesc: { fontSize: 13, marginBottom: 16, lineHeight: 20 },
+  exportBtn: {
+    padding: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  exportText: { color: '#1A1428', fontWeight: '700', fontSize: 15 },
 });

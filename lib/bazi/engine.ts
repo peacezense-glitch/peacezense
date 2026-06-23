@@ -6,6 +6,8 @@ import {
   BaziLuckPillar,
   BaziFullReport,
 } from '@/types';
+import { correctToTrueSolarTime, formatSolarTimeNote } from '@/lib/solarTime';
+import { getLongitudeForPlace } from '@/constants/Cities';
 
 const STEM_ELEMENTS: Record<string, string> = {
   甲: '木', 乙: '木', 丙: '火', 丁: '火', 戊: '土',
@@ -44,9 +46,17 @@ export function calculateBaziFull(
   birthDate: string,
   birthTime: string,
   gender: string,
+  options?: { longitude?: number; useTrueSolarTime?: boolean; birthPlace?: string },
 ): BaziFullReport {
-  const [year, month, day] = birthDate.split('-').map(Number);
-  const [hour, minute = 0] = birthTime.split(':').map(Number);
+  const longitude = getLongitudeForPlace(
+    options?.birthPlace ?? '',
+    options?.longitude,
+  );
+  const useCorrection = options?.useTrueSolarTime ?? true;
+  const corrected = correctToTrueSolarTime(birthDate, birthTime, longitude, useCorrection);
+
+  const [year, month, day] = corrected.date.split('-').map(Number);
+  const [hour, minute = 0] = corrected.time.split(':').map(Number);
   const solar = Solar.fromYmdHms(year, month, day, hour, minute, 0);
   const lunar = solar.getLunar();
   const ec = lunar.getEightChar();
@@ -106,6 +116,8 @@ export function calculateBaziFull(
     solarDate: solar.toYmd(),
     lunarDate: lunar.toString(),
     jieQi: lunar.getJieQi() || lunar.getPrevJieQi()?.getName() || '',
+    solarTimeNote: formatSolarTimeNote(corrected.offsetMinutes, longitude),
+    correctedTime: corrected.time,
   };
 }
 
