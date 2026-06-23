@@ -87,7 +87,9 @@ export default function SubscribeScreen() {
           style={[styles.hero, cardShadow(colorScheme)]}
         >
         <SymbolView
-          name={{ ios: 'crown.fill', android: 'star', web: 'star' }}
+          name={{ ios: 'crown.fill', android: 'star', web: 'star' } as unknown as Parameters<
+            typeof SymbolView
+          >[0]['name']}
           tintColor={colors.secondary}
           size={48}
         />

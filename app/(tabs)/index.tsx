@@ -82,7 +82,9 @@ export default function HomeScreen() {
             <Text style={[styles.fortuneTitle, { color: colors.secondary }]}>今日運勢</Text>
             <View style={[styles.fortuneIcon, { backgroundColor: colors.primary + '20' }]}>
               <SymbolView
-                name={{ ios: 'sun.max.fill', android: 'wb_sunny', web: 'wb_sunny' }}
+                name={{ ios: 'sun.max.fill', android: 'wb_sunny', web: 'wb_sunny' } as unknown as Parameters<
+                  typeof SymbolView
+                >[0]['name']}
                 tintColor={colors.primary}
                 size={18}
               />
@@ -120,7 +122,9 @@ export default function HomeScreen() {
             <View style={styles.zeriRow}>
               <View style={[styles.zeriIcon, { backgroundColor: colors.secondary + '40' }]}>
                 <SymbolView
-                  name={{ ios: 'calendar.badge.clock', android: 'event', web: 'event' }}
+                  name={{ ios: 'calendar.badge.clock', android: 'event', web: 'event' } as unknown as Parameters<
+                    typeof SymbolView
+                  >[0]['name']}
                   tintColor={colors.onSecondary}
                   size={22}
                 />
@@ -132,7 +136,9 @@ export default function HomeScreen() {
                 </Text>
               </View>
               <SymbolView
-                name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
+                name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' } as unknown as Parameters<
+                  typeof SymbolView
+                >[0]['name']}
                 tintColor={colors.onSecondary}
                 size={18}
               />

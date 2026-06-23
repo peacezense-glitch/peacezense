@@ -36,7 +36,8 @@ export default function ModuleCard({ module, compact = false }: ModuleCardProps)
       >
         <View style={[styles.iconCircle, { backgroundColor: module.color + '45' }]}>
           <SymbolView
-            name={module.icon as Parameters<typeof SymbolView>[0]['name']}
+            // SDK 54 SymbolView typing is iOS-only; keep runtime cross-platform.
+            name={module.icon as unknown as Parameters<typeof SymbolView>[0]['name']}
             tintColor={module.color}
             size={compact ? 24 : 28}
           />
@@ -59,7 +60,9 @@ export default function ModuleCard({ module, compact = false }: ModuleCardProps)
         </View>
         <View style={[styles.chevronCircle, { backgroundColor: colors.backgroundSecondary }]}>
           <SymbolView
-            name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
+            name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' } as unknown as Parameters<
+              typeof SymbolView
+            >[0]['name']}
             tintColor={colors.textSecondary}
             size={16}
           />

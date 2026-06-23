@@ -46,7 +46,9 @@ export default function TabLayout() {
           headerTitle: 'PeaceZense',
           tabBarIcon: ({ color }) => (
             <SymbolView
-              name={{ ios: 'house.fill', android: 'home', web: 'home' }}
+              name={{ ios: 'house.fill', android: 'home', web: 'home' } as unknown as Parameters<
+                typeof SymbolView
+              >[0]['name']}
               tintColor={color}
               size={24}
             />
@@ -60,7 +62,9 @@ export default function TabLayout() {
           headerShown: false,
           tabBarIcon: ({ color }) => (
             <SymbolView
-              name={{ ios: 'person.fill', android: 'person', web: 'person' }}
+              name={{ ios: 'person.fill', android: 'person', web: 'person' } as unknown as Parameters<
+                typeof SymbolView
+              >[0]['name']}
               tintColor={color}
               size={24}
             />
@@ -74,7 +78,9 @@ export default function TabLayout() {
           headerShown: false,
           tabBarIcon: ({ color }) => (
             <SymbolView
-              name={{ ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' }}
+              name={{ ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' } as unknown as Parameters<
+                typeof SymbolView
+              >[0]['name']}
               tintColor={color}
               size={24}
             />
@@ -88,7 +94,11 @@ export default function TabLayout() {
           headerTitle: 'AI 命理師',
           tabBarIcon: ({ color }) => (
             <SymbolView
-              name={{ ios: 'bubble.left.and.bubble.right.fill', android: 'chat', web: 'chat' }}
+              name={{
+                ios: 'bubble.left.and.bubble.right.fill',
+                android: 'chat',
+                web: 'chat',
+              } as unknown as Parameters<typeof SymbolView>[0]['name']}
               tintColor={color}
               size={24}
             />
@@ -102,7 +112,9 @@ export default function TabLayout() {
           headerTitle: '個人資料',
           tabBarIcon: ({ color }) => (
             <SymbolView
-              name={{ ios: 'gearshape.fill', android: 'settings', web: 'settings' }}
+              name={{ ios: 'gearshape.fill', android: 'settings', web: 'settings' } as unknown as Parameters<
+                typeof SymbolView
+              >[0]['name']}
               tintColor={color}
               size={24}
             />

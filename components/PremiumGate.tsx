@@ -36,7 +36,9 @@ export default function PremiumGate({ feature, children, compact = false }: Prem
       >
         <View style={[styles.lockBadge, { backgroundColor: colors.secondary + '25' }]}>
           <SymbolView
-            name={{ ios: 'lock.fill', android: 'lock', web: 'lock' }}
+            name={{ ios: 'lock.fill', android: 'lock', web: 'lock' } as unknown as Parameters<
+              typeof SymbolView
+            >[0]['name']}
             tintColor={colors.secondary}
             size={compact ? 20 : 24}
           />
