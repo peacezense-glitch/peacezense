@@ -4,12 +4,13 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-# Fixed subdomain keeps the same ngrok host across restarts when possible.
-export EXPO_TUNNEL_SUBDOMAIN="${EXPO_TUNNEL_SUBDOMAIN:-t3xue48}"
+# Branded, stable subdomain for Expo/ngrok tunnel (avoid random exp.direct hosts).
+export EXPO_TUNNEL_SUBDOMAIN="${EXPO_TUNNEL_SUBDOMAIN:-peacezense5841}"
 
 mkdir -p "$ROOT_DIR/.expo"
 LOG_FILE="$ROOT_DIR/.expo/preview.log"
 STATUS_FILE="$ROOT_DIR/.expo/preview-status.json"
+HEALTH_INTERVAL_SECONDS="${HEALTH_INTERVAL_SECONDS:-20}"
 
 log() {
   echo "[$(date -Iseconds)] $*" | tee -a "$LOG_FILE"
@@ -39,8 +40,12 @@ read_tunnel_urls() {
 
 write_status() {
   local state="$1"
-  local web="${2:-https://${EXPO_TUNNEL_SUBDOMAIN}.ngrok.io}"
-  local exp="${3:-exp://${EXPO_TUNNEL_SUBDOMAIN}.ngrok.io}"
+  local web="${2:-}"
+  local exp="${3:-}"
+  if [[ -z "$web" ]]; then
+    web="https://${EXPO_TUNNEL_SUBDOMAIN}.ngrok.io"
+    exp="exp://${EXPO_TUNNEL_SUBDOMAIN}.ngrok.io"
+  fi
   cat >"$STATUS_FILE" <<EOF
 {
   "state": "$state",
@@ -53,9 +58,26 @@ write_status() {
 EOF
 }
 
+metro_healthy() {
+  curl -fsS http://127.0.0.1:8081/status >/dev/null 2>&1
+}
+
+tunnel_healthy() {
+  read_tunnel_urls || return 1
+  curl -fsS "${WEB_URL}/status" >/dev/null 2>&1
+}
+
+stop_expo() {
+  if [[ -n "${EXPO_PID:-}" ]] && kill -0 "$EXPO_PID" 2>/dev/null; then
+    kill "$EXPO_PID" 2>/dev/null || true
+    wait "$EXPO_PID" 2>/dev/null || true
+  fi
+  pkill -f "expo start --tunnel" 2>/dev/null || true
+}
+
 wait_for_tunnel() {
   for _ in $(seq 1 60); do
-    if read_tunnel_urls; then
+    if tunnel_healthy; then
       write_status "running" "$WEB_URL" "$EXP_URL"
       log "Tunnel live: web=$WEB_URL exp=$EXP_URL"
       return 0
@@ -66,10 +88,29 @@ wait_for_tunnel() {
   return 1
 }
 
-log "PeaceZense persistent preview watchdog (subdomain: ${EXPO_TUNNEL_SUBDOMAIN})"
+monitor_until_unhealthy() {
+  while kill -0 "$EXPO_PID" 2>/dev/null; do
+    if ! metro_healthy; then
+      log "Metro went offline"
+      return 1
+    fi
+    if ! tunnel_healthy; then
+      log "Public tunnel went offline"
+      return 1
+    fi
+    write_status "running" "$WEB_URL" "$EXP_URL"
+    sleep "$HEALTH_INTERVAL_SECONDS"
+  done
+  return 0
+}
+
+trap 'stop_expo' EXIT INT TERM
+
+log "PeaceZense persistent preview (subdomain: ${EXPO_TUNNEL_SUBDOMAIN})"
 write_status "watchdog"
 
 while true; do
+  stop_expo
   log "Starting Expo tunnel..."
   write_status "starting"
 
@@ -78,14 +119,16 @@ while true; do
   EXPO_PID=$!
   set -e
 
-  wait_for_tunnel || log "Tunnel URL not detected yet; Expo still starting"
+  if ! wait_for_tunnel; then
+    log "Tunnel did not become healthy in time"
+    stop_expo
+    sleep 5
+    continue
+  fi
 
-  set +e
-  wait "$EXPO_PID"
-  code=$?
-  set -e
-
-  log "Expo exited (code=$code). Restarting in 5 seconds..."
+  monitor_until_unhealthy || true
+  log "Restarting preview after offline/disconnect..."
+  stop_expo
   write_status "restarting"
   sleep 5
 done
