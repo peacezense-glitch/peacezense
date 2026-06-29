@@ -37,6 +37,8 @@
   },
   "scripts": {
     "start": "expo start",
+    "preview": "expo start --tunnel",
+    "preview:persistent": "bash scripts/preview-persistent.sh",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web"
