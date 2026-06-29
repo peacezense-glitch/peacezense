@@ -33,6 +33,7 @@
   "devDependencies": {
     "@expo/ngrok": "^4.1.3",
     "@types/react": "~19.1.10",
+    "gh-pages": "^6.3.0",
     "typescript": "~5.9.2"
   },
   "scripts": {
@@ -40,6 +41,8 @@
     "preview": "EXPO_TUNNEL_SUBDOMAIN=peacezense5841 expo start --tunnel",
     "preview:persistent": "EXPO_TUNNEL_SUBDOMAIN=peacezense5841 bash scripts/preview-persistent.sh",
     "preview:ensure": "bash scripts/preview-ensure.sh",
+    "build:web": "expo export -p web",
+    "deploy:web": "npm run build:web && gh-pages -d dist --nojekyll -t true",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web"
