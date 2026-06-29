@@ -39,6 +39,7 @@
     "start": "expo start",
     "preview": "EXPO_TUNNEL_SUBDOMAIN=peacezense5841 expo start --tunnel",
     "preview:persistent": "EXPO_TUNNEL_SUBDOMAIN=peacezense5841 bash scripts/preview-persistent.sh",
+    "preview:ensure": "bash scripts/preview-ensure.sh",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web"

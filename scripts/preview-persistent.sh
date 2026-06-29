@@ -4,131 +4,68 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-# Branded, stable subdomain for Expo/ngrok tunnel (avoid random exp.direct hosts).
 export EXPO_TUNNEL_SUBDOMAIN="${EXPO_TUNNEL_SUBDOMAIN:-peacezense5841}"
+export METRO_PORT="${METRO_PORT:-8081}"
 
 mkdir -p "$ROOT_DIR/.expo"
 LOG_FILE="$ROOT_DIR/.expo/preview.log"
-STATUS_FILE="$ROOT_DIR/.expo/preview-status.json"
-HEALTH_INTERVAL_SECONDS="${HEALTH_INTERVAL_SECONDS:-20}"
 
 log() {
   echo "[$(date -Iseconds)] $*" | tee -a "$LOG_FILE"
 }
 
-read_tunnel_urls() {
-  local json
-  json="$(curl -fsS http://127.0.0.1:4040/api/tunnels 2>/dev/null || true)"
-  if [[ -z "$json" ]]; then
-    return 1
-  fi
+metro_healthy() {
+  curl -fsS "http://127.0.0.1:${METRO_PORT}/status" >/dev/null 2>&1
+}
 
-  WEB_URL="$(node -e "
-    const data = JSON.parse(process.argv[1]);
-    const https = (data.tunnels || []).find((t) => t.proto === 'https');
-    if (https?.public_url) console.log(https.public_url);
-  " "$json")"
+stop_metro() {
+  pkill -f "expo start" 2>/dev/null || true
+  pkill -f "metro" 2>/dev/null || true
+}
 
-  if [[ -n "${WEB_URL:-}" ]]; then
-    local host="${WEB_URL#https://}"
-    host="${host#http://}"
-    EXP_URL="exp://${host}"
+start_metro() {
+  if metro_healthy; then
+    log "Metro already running on :${METRO_PORT}"
     return 0
   fi
-  return 1
-}
 
-write_status() {
-  local state="$1"
-  local web="${2:-}"
-  local exp="${3:-}"
-  if [[ -z "$web" ]]; then
-    web="https://${EXPO_TUNNEL_SUBDOMAIN}.ngrok.io"
-    exp="exp://${EXPO_TUNNEL_SUBDOMAIN}.ngrok.io"
-  fi
-  cat >"$STATUS_FILE" <<EOF
-{
-  "state": "$state",
-  "webUrl": "$web",
-  "expUrl": "$exp",
-  "subdomain": "${EXPO_TUNNEL_SUBDOMAIN}",
-  "persistent": true,
-  "updatedAt": "$(date -Iseconds)"
-}
-EOF
-}
+  log "Starting Metro (no tunnel) on :${METRO_PORT}..."
+  npx expo start --port "$METRO_PORT" --localhost 2>&1 | tee -a "$LOG_FILE" &
+  METRO_PID=$!
 
-metro_healthy() {
-  curl -fsS http://127.0.0.1:8081/status >/dev/null 2>&1
-}
-
-tunnel_healthy() {
-  read_tunnel_urls || return 1
-  curl -fsS "${WEB_URL}/status" >/dev/null 2>&1
-}
-
-stop_expo() {
-  if [[ -n "${EXPO_PID:-}" ]] && kill -0 "$EXPO_PID" 2>/dev/null; then
-    kill "$EXPO_PID" 2>/dev/null || true
-    wait "$EXPO_PID" 2>/dev/null || true
-  fi
-  pkill -f "expo start --tunnel" 2>/dev/null || true
-}
-
-wait_for_tunnel() {
-  for _ in $(seq 1 60); do
-    if tunnel_healthy; then
-      write_status "running" "$WEB_URL" "$EXP_URL"
-      log "Tunnel live: web=$WEB_URL exp=$EXP_URL"
+  for _ in $(seq 1 90); do
+    if metro_healthy; then
+      log "Metro ready (pid=$METRO_PID)"
       return 0
     fi
     sleep 2
   done
-  write_status "starting"
+
+  log "Metro failed to start"
   return 1
 }
 
-monitor_until_unhealthy() {
-  while kill -0 "$EXPO_PID" 2>/dev/null; do
+monitor_metro() {
+  while true; do
+    sleep 15
     if ! metro_healthy; then
-      log "Metro went offline"
-      return 1
+      log "Metro died — restarting Metro only"
+      stop_metro
+      sleep 2
+      start_metro || true
     fi
-    if ! tunnel_healthy; then
-      log "Public tunnel went offline"
-      return 1
-    fi
-    write_status "running" "$WEB_URL" "$EXP_URL"
-    sleep "$HEALTH_INTERVAL_SECONDS"
   done
-  return 0
 }
 
-trap 'stop_expo' EXIT INT TERM
+trap 'stop_metro; pkill -f ngrok-tunnel.mjs 2>/dev/null || true' EXIT INT TERM
 
-log "PeaceZense persistent preview (subdomain: ${EXPO_TUNNEL_SUBDOMAIN})"
-write_status "watchdog"
+log "PeaceZense split preview: Metro + independent ngrok tunnel"
+stop_metro
+start_metro
+monitor_metro &
+MONITOR_PID=$!
 
-while true; do
-  stop_expo
-  log "Starting Expo tunnel..."
-  write_status "starting"
+# Tunnel manager runs in foreground; auto-reconnects without killing Metro.
+node "$ROOT_DIR/scripts/ngrok-tunnel.mjs" 2>&1 | tee -a "$LOG_FILE"
 
-  set +e
-  npm run start -- --tunnel 2>&1 | tee -a "$LOG_FILE" &
-  EXPO_PID=$!
-  set -e
-
-  if ! wait_for_tunnel; then
-    log "Tunnel did not become healthy in time"
-    stop_expo
-    sleep 5
-    continue
-  fi
-
-  monitor_until_unhealthy || true
-  log "Restarting preview after offline/disconnect..."
-  stop_expo
-  write_status "restarting"
-  sleep 5
-done
+kill "$MONITOR_PID" 2>/dev/null || true
